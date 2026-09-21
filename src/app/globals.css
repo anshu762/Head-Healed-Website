@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+@theme {
+  --color-hh-blue: #7fa9c9;
+  --color-hh-sage: #a8c8b0;
+  --color-hh-cream: #faf7f2;
+  --color-hh-yellow: #f7e7a1;
+  --color-hh-ink: #3b3b3b;
+  --color-hh-blue-deep: #5c88a8;
+  --color-hh-sage-deep: #6e9b7a;
+  --color-hh-coral: #e8836f;
+  --color-hh-ink-soft: #6b6b6b;
+  --color-hh-line: #eae3da;
+  --color-hh-surface: #ffffff;
+
+  --font-display: var(--font-quicksand), system-ui, sans-serif;
+  --font-body: var(--font-jakarta), system-ui, sans-serif;
+
+  --radius-card: 24px;
+  --radius-pill: 9999px;
+  --radius-modal: 28px;
+
+  --shadow-warm-sm: 0 2px 8px rgba(59, 59, 59, 0.04);
+  --shadow-warm: 0 8px 30px rgba(59, 59, 59, 0.06);
+  --shadow-warm-lg: 0 16px 40px rgba(59, 59, 59, 0.08);
+}
+
+:root {
+  --hh-blue: #7fa9c9;
+  --hh-sage: #a8c8b0;
+  --hh-cream: #faf7f2;
+  --hh-yellow: #f7e7a1;
+  --hh-ink: #3b3b3b;
+  --hh-blue-deep: #5c88a8;
+  --hh-sage-deep: #6e9b7a;
+  --hh-coral: #e8836f;
+  --hh-ink-soft: #6b6b6b;
+  --hh-line: #eae3da;
+  --hh-surface: #ffffff;
+}
+
+/* Base styling */
+html {
+  scroll-behavior: smooth;
+  background-color: var(--hh-cream);
+  color: var(--hh-ink);
+}
+
+body {
+  font-family: var(--font-jakarta), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  min-height: 100vh;
+  background-color: var(--hh-cream);
+  color: var(--hh-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings font */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-quicksand), var(--font-jakarta), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--hh-ink);
+}
+
+h1 {
+  font-size: clamp(2.25rem, 5vw, 3.75rem);
+  line-height: 1.15;
+}
+
+h2 {
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  line-height: 1.25;
+}
+
+h3 {
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  line-height: 1.35;
+}
+
+/* Accessible focus ring: 2px --hh-blue-deep, 2px offset */
+*:focus-visible {
+  outline: 2px solid var(--hh-blue-deep);
+  outline-offset: 2px;
+}
+
+/* Soft grain background utility */
+.bg-soft-grain {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.025'/%3E%3C/svg%3E");
+}
+
+/* Card base styling */
+.hh-card {
+  background: var(--hh-surface);
+  border: 1px solid var(--hh-line);
+  border-radius: 24px;
+  box-shadow: 0 8px 30px rgba(59, 59, 59, 0.05);
+}
+
+/* Respect reduced motion globally */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
