@@ -1,0 +1,162 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  FLAGGED
+}
+
+enum ResourceType {
+  ARTICLE
+  GUIDE
+  WORKSHEET
+  HELPLINE
+  VIDEO
+  OTHER
+}
+
+enum RiskLevel {
+  NONE
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Emotion {
+  id                  String   @id @default(cuid())
+  slug                String   @unique
+  title               String
+  description         String
+  activityTitle       String
+  activityDescription String
+  guideUrl            String?
+  videoUrl            String?
+  iconName            String   @default("Heart")
+  order               Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  stories Story[]
+
+  @@map("emotions")
+}
+
+model Story {
+  id          String           @id @default(cuid())
+  slug        String           @unique
+  title       String
+  excerpt     String
+  content     String
+  emotionSlug String?
+  emotionId   String?
+  emotion     Emotion?         @relation(fields: [emotionId], references: [id], onDelete: SetNull)
+  authorName  String           @default("Anonymous")
+  isAnonymous Boolean          @default(true)
+  status      SubmissionStatus @default(PENDING)
+  featured    Boolean          @default(false)
+  riskLevel   RiskLevel        @default(NONE)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@map("stories")
+}
+
+model Myth {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  myth           String
+  fact           String
+  referenceTitle String
+  referenceUrl   String
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("myths")
+}
+
+model Resource {
+  id          String       @id @default(cuid())
+  slug        String       @unique
+  title       String
+  description String
+  url         String
+  type        ResourceType @default(ARTICLE)
+  category    String
+  region      String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("resources")
+}
+
+model Faq {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  question  String
+  answer    String
+  category  String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("faqs")
+}
+
+model EmergencyContact {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  name           String
+  phone          String
+  description    String
+  url            String?
+  availableHours String   @default("24/7")
+  region         String   @default("National")
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("emergency_contacts")
+}
+
+model ChatSession {
+  id        String        @id @default(cuid())
+  riskLevel RiskLevel     @default(NONE)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  messages  ChatMessage[]
+
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id          String      @id @default(cuid())
+  sessionId   String
+  session     ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role        String
+  content     String
+  riskFlagged Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+
+  @@map("chat_messages")
+}
+
+model ContactMessage {
+  id        String           @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  status    SubmissionStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+
+  @@map("contact_messages")
+}
