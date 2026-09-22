@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "verify": "tsx scripts/verify-disclaimers.ts",
+    "check:links": "tsx scripts/check-links.ts",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio"
