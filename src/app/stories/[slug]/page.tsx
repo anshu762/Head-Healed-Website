@@ -14,6 +14,8 @@ import {
   Share2,
 } from "lucide-react";
 
+import { ArticleJsonLd } from "@/components/seo/json-ld";
+
 interface StoryPageProps {
   params: Promise<{
     slug: string;
@@ -64,6 +66,13 @@ export default async function StoryDetailPage({ params }: StoryPageProps) {
 
   return (
     <article className="py-12 sm:py-20">
+      <ArticleJsonLd
+        title={story.title}
+        description={story.excerpt}
+        slug={story.slug}
+        datePublished={new Date(story.createdAt).toISOString()}
+        authorName={story.authorName}
+      />
       <Container size="narrow">
         {/* Navigation Breadcrumb */}
         <div className="mb-8">

@@ -5,6 +5,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { EmergencyFab } from "@/components/emergency/emergency-fab";
 import { EmergencyProvider } from "@/components/emergency/emergency-provider";
+import { AnalyticsProvider } from "@/components/analytics/analytics-provider";
 import "@/app/globals.css";
 
 const quicksand = Quicksand({
@@ -22,12 +23,36 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Heard & Healed | Youth Emotional Wellbeing & Mental Health Education",
+  title: {
+    default: "Heard & Healed · Youth Emotional Wellbeing & Mental Health Education",
+    template: "%s · Heard & Healed",
+  },
   description:
     "A gentle, youth-focused safe space to explore emotions, understand mental health, reflect with Echo AI, and discover supportive real-world resources.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://heard-healed.vercel.app"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://heard-healed.vercel.app"
+  ),
+  keywords: [
+    "youth mental health",
+    "emotional wellbeing",
+    "teen mental health",
+    "anxiety grounding",
+    "burnout reflection",
+    "adolescent emotional education",
+    "Echo AI",
+    "mental health resources",
+  ],
+  authors: [{ name: "Heard & Healed Team" }],
+  creator: "Heard & Healed",
+  publisher: "Heard & Healed",
+  formatDetection: {
+    telephone: false,
+  },
   openGraph: {
-    title: "Heard & Healed | Youth Emotional Wellbeing",
+    title: {
+      default: "Heard & Healed · Youth Emotional Wellbeing",
+      template: "%s · Heard & Healed",
+    },
     description:
       "A gentle, safe space to explore emotions, understand mental health, reflect with Echo AI, and discover supportive resources.",
     type: "website",
@@ -36,9 +61,23 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Heard & Healed | Youth Emotional Wellbeing",
+    title: {
+      default: "Heard & Healed · Youth Emotional Wellbeing",
+      template: "%s · Heard & Healed",
+    },
     description:
       "A gentle, safe space to explore emotions, understand mental health, and reflect.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 
@@ -64,6 +103,7 @@ export default function RootLayout({
         </a>
 
         <EmergencyProvider>
+          <AnalyticsProvider />
           <Navbar />
           <main id="main" className="flex-1 pt-20">
             {children}

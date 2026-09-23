@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Container } from "@/components/ui/container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { FaqClientList } from "@/components/faqs/faq-client-list";
+import { FaqPageJsonLd } from "@/components/seo/json-ld";
 import { getAllFaqs } from "@/lib/data/faq-data";
 
 export const metadata: Metadata = {
@@ -16,6 +17,12 @@ export default async function FaqsPage() {
   return (
     <div className="py-12 sm:py-20 bg-[#FAF7F2]">
       <Container>
+        <FaqPageJsonLd
+          faqs={faqs.map((f) => ({
+            question: f.question,
+            answer: f.answer,
+          }))}
+        />
         <SectionHeading
           badge="Answers &amp; Clarity"
           title="Frequently Asked Questions"

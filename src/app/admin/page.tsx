@@ -1,13 +1,30 @@
+import dynamic from "next/dynamic";
 import { cookies } from "next/headers";
 import { Container } from "@/components/ui/container";
 import { AdminLoginForm } from "@/components/admin/admin-login-form";
-import { AdminDashboard, type AdminStory, type AdminContactMessage } from "@/components/admin/admin-dashboard";
+import type { AdminStory, AdminContactMessage } from "@/components/admin/admin-dashboard";
 import { db } from "@/lib/db";
 import type { Metadata } from "next";
+
+const AdminDashboard = dynamic(
+  () => import("@/components/admin/admin-dashboard").then((mod) => mod.AdminDashboard),
+  {
+    loading: () => (
+      <div className="w-full h-96 rounded-[28px] border border-hh-line bg-white/70 animate-pulse flex items-center justify-center text-sm text-hh-ink-soft">
+        Loading moderation dashboard...
+      </div>
+    ),
+  }
+);
 
 export const metadata: Metadata = {
   title: "Admin Moderation | Heard & Healed",
   description: "Moderation dashboard for reviewing stories, flags, and contact messages.",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+  },
 };
 
 const ADMIN_COOKIE_NAME = "hh_admin_token";

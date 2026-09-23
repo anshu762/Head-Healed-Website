@@ -8,6 +8,7 @@ import { StoryPreview } from "@/components/home/story-preview";
 import { EchoTeaser } from "@/components/home/echo-teaser";
 import { HomeFaqs } from "@/components/home/home-faqs";
 import { ClosingBand } from "@/components/home/closing-band";
+import { OrganizationJsonLd } from "@/components/seo/json-ld";
 import {
   getHomeEmotions,
   getHomeStories,
@@ -29,6 +30,7 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col">
+      <OrganizationJsonLd />
       {/* 1. Hero Section with staggered H1 and dynamic hand-drawn scene */}
       <HeroSection />
 
