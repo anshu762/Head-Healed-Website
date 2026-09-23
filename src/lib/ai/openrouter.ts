@@ -4,11 +4,15 @@ import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 /**
  * OpenRouter Provider Configuration for Echo AI.
  *
- * Supported & Tested Alternative Models:
- * - "anthropic/claude-3.5-haiku" (Default: fast, warm, highly empathetic)
- * - "openai/gpt-4o-mini" (Fast, balanced, conversational)
- * - "google/gemini-flash-1.5" (High throughput, responsive)
- * - "meta-llama/llama-3.3-70b-instruct" (Open weights alternative)
+ * 100% Free Models (No token bill, $0.00 cost):
+ * - "openrouter/free" (Default: automatically routes to best available free model)
+ * - "meta-llama/llama-3.2-3b-instruct:free" (Fast, lightweight, free)
+ * - "google/gemini-2.0-flash-lite-preview-02-05:free" (High speed, smart, free)
+ * - "deepseek/deepseek-chat:free" (Free)
+ *
+ * Ultra Low-Cost Paid Alternatives (if needed):
+ * - "google/gemini-flash-1.5" (~$0.075 / 1M tokens)
+ * - "openai/gpt-4o-mini" (~$0.15 / 1M tokens)
  */
 export const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY || "",
@@ -19,7 +23,7 @@ export const openrouter = createOpenRouter({
 });
 
 export const DEFAULT_ECHO_MODEL =
-  process.env.OPENROUTER_MODEL || "anthropic/claude-3.5-haiku";
+  process.env.OPENROUTER_MODEL || "openrouter/free";
 
 export const ECHO_MODEL_SETTINGS = {
   temperature: 0.6,
