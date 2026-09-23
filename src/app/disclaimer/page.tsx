@@ -1,49 +1,97 @@
 import { Container } from "@/components/ui/container";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { GLOBAL_DISCLAIMER, EMERGENCY_DISCLAIMER } from "@/lib/safety/disclaimers";
+import {
+  GLOBAL_DISCLAIMER,
+  EMERGENCY_DISCLAIMER,
+  ECHO_DISCLAIMER,
+} from "@/lib/safety/disclaimers";
+import { DisclaimerEmergencyButton } from "@/components/emergency/disclaimer-emergency-button";
+import { ShieldAlert, BookOpen, Bot, HeartHandshake } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Disclaimer | Heard & Healed",
-  description: "Educational platform boundaries, medical disclaimers, and crisis guidelines.",
+  title: "Disclaimer & Boundaries | Heard & Healed",
+  description:
+    "Educational platform boundaries, medical disclaimers, and emergency crisis safety guidelines.",
 };
 
 export default function DisclaimerPage() {
   return (
-    <div className="py-16 sm:py-24">
+    <div className="py-12 sm:py-20">
       <Container size="narrow">
         <SectionHeading
           badge="Platform Boundaries"
           title="Educational Disclaimer"
-          description="Heard & Healed is a starting point — not a replacement for professional care or emergency services."
+          description="Heard & Healed is a supportive starting point — not a replacement for professional care, medical diagnosis, or emergency intervention."
           as="h1"
         />
 
-        <div className="mt-8 space-y-6 text-hh-ink leading-relaxed">
-          <div className="rounded-2xl border border-hh-line bg-white p-6 shadow-xs">
-            <h3 className="font-display text-base font-bold text-hh-ink mb-2">
-              General Educational Disclaimer
-            </h3>
-            <p className="text-[15px] text-hh-ink leading-relaxed">
+        <div className="mt-10 space-y-8 text-hh-ink leading-relaxed">
+          {/* 1. Global Platform Disclaimer */}
+          <div className="rounded-[28px] border border-hh-line bg-white p-7 sm:p-9 shadow-warm space-y-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-hh-blue-deep uppercase tracking-wider">
+              <BookOpen className="h-4 w-4" />
+              <span>Platform Educational Purpose</span>
+            </div>
+            <h2 className="font-display text-xl font-bold text-hh-ink">
+              General Disclaimer
+            </h2>
+            <p className="text-[16px] text-hh-ink font-medium leading-relaxed">
               {GLOBAL_DISCLAIMER}
             </p>
           </div>
 
-          <div className="rounded-2xl border border-hh-coral/30 bg-hh-coral/10 p-6 shadow-xs">
-            <h3 className="font-display text-base font-bold text-hh-ink mb-2">
+          {/* 2. Non-Negotiable Verbatim Emergency Disclaimer */}
+          <div className="rounded-[28px] border border-hh-coral/40 bg-hh-coral/10 p-7 sm:p-9 shadow-warm space-y-4">
+            <div className="flex items-center gap-2 text-xs font-bold text-hh-coral uppercase tracking-wider">
+              <ShieldAlert className="h-4 w-4" />
+              <span>Immediate Safety Notice</span>
+            </div>
+            <h2 className="font-display text-xl font-bold text-hh-ink">
               Emergency &amp; Crisis Notice
-            </h3>
-            <p className="text-[15px] text-hh-ink leading-relaxed">
+            </h2>
+            <p className="text-[16px] text-hh-ink font-medium leading-relaxed">
               {EMERGENCY_DISCLAIMER}
+            </p>
+            <div className="pt-2">
+              <DisclaimerEmergencyButton />
+            </div>
+          </div>
+
+          {/* 3. Echo AI Disclaimer */}
+          <div className="rounded-[28px] border border-hh-line bg-white p-7 sm:p-9 shadow-warm space-y-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-hh-sage-deep uppercase tracking-wider">
+              <Bot className="h-4 w-4" />
+              <span>Artificial Intelligence Limitations</span>
+            </div>
+            <h2 className="font-display text-xl font-bold text-hh-ink">
+              Echo AI Assistant Disclaimer
+            </h2>
+            <p className="text-[16px] text-hh-ink font-medium leading-relaxed">
+              {ECHO_DISCLAIMER}
             </p>
           </div>
 
-          <div className="space-y-4 pt-4 text-hh-ink-soft text-sm leading-relaxed">
+          {/* 4. Platform Boundaries & Professional Support Guidance */}
+          <div className="rounded-[28px] border border-hh-line bg-white p-7 sm:p-9 shadow-warm space-y-4 text-sm sm:text-base">
+            <div className="flex items-center gap-2 text-xs font-bold text-hh-ink-soft uppercase tracking-wider">
+              <HeartHandshake className="h-4 w-4" />
+              <span>Professional Care</span>
+            </div>
+            <h2 className="font-display text-xl font-bold text-hh-ink">
+              When to Seek Professional Support
+            </h2>
             <p>
-              The information on this website is intended for education, reflection, and support. It is not medical or psychological advice and should not be used to diagnose yourself or someone else.
+              The reflections, activities, and educational explanations on Heard
+              &amp; Healed are designed to help you notice and explore emotions.
+              They are not psychological advice and cannot evaluate or diagnose any
+              condition.
             </p>
             <p>
-              Our reflections and activities can help you put words to what you feel, but they cannot tell you what is happening medically or prescribe treatment. If you are struggling, we warmly encourage you to reach out to a trusted adult, doctor, or mental health professional.
+              If your feelings feel unmanageable, persistent, or are interfering
+              with your daily life, school, or relationships, we warmly encourage
+              you to speak with a trusted adult, family doctor, school counsellor,
+              or qualified mental health professional.
             </p>
           </div>
         </div>
