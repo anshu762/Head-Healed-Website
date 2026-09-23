@@ -7,10 +7,27 @@ import {
   Sprout,
   ShieldAlert,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { Container } from "@/components/ui/container";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { EchoChat } from "@/components/echo/echo-chat";
 import { getEmotionBySlug } from "@/lib/data/feelings-data";
+
+const EchoChat = dynamic(
+  () => import("@/components/echo/echo-chat").then((mod) => mod.EchoChat),
+  {
+    loading: () => (
+      <div className="w-full h-[640px] rounded-[28px] border border-hh-line bg-white/80 animate-pulse flex flex-col items-center justify-center gap-3 p-8 text-center">
+        <div className="h-12 w-12 rounded-full bg-hh-blue/20" />
+        <p className="font-display text-base font-bold text-hh-ink">
+          Preparing your space with Echo...
+        </p>
+        <p className="text-xs text-hh-ink-soft max-w-sm">
+          A gentle, non-judgmental space to put feelings into words.
+        </p>
+      </div>
+    ),
+  }
+);
 
 export const metadata: Metadata = {
   title: "Talk to Echo — Reflective AI Companion | Heard & Healed",

@@ -9,6 +9,7 @@ import {
   ArrowDown,
   Phone,
   HeartHandshake,
+  WifiOff,
 } from "lucide-react";
 import { useEmergency } from "@/components/emergency/emergency-provider";
 import { EchoDisclaimerGate } from "@/components/echo/echo-disclaimer-gate";
@@ -65,6 +66,21 @@ export function EchoChat({
   const [isLoading, setIsLoading] = useState(false);
   const [isComposerPaused, setIsComposerPaused] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsOffline(!navigator.onLine);
+      const handleOnline = () => setIsOffline(false);
+      const handleOffline = () => setIsOffline(true);
+      window.addEventListener("online", handleOnline);
+      window.addEventListener("offline", handleOffline);
+      return () => {
+        window.removeEventListener("online", handleOnline);
+        window.removeEventListener("offline", handleOffline);
+      };
+    }
+  }, []);
 
   // Auto-scroll and scroll-to-bottom pill
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -463,6 +479,23 @@ export function EchoChat({
 
         {/* Input Composer Area */}
         <div className="p-4 sm:p-5 border-t border-[var(--hh-line)] bg-white space-y-3">
+          {/* Offline network indicator */}
+          {isOffline && (
+            <div className="py-2.5 px-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 font-medium flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <WifiOff className="w-4 h-4 text-amber-700 shrink-0" />
+                <span>You appear to be offline. Echo requires an internet connection.</span>
+              </div>
+              <button
+                type="button"
+                onClick={openEmergency}
+                className="underline font-bold text-amber-900 hover:text-black shrink-0 text-xs"
+              >
+                Offline Helplines
+              </button>
+            </div>
+          )}
+
           {/* Paused Composer Banner (during crisis escalation) */}
           {isComposerPaused ? (
             <div className="py-3 px-4 rounded-2xl bg-[#FFF6F3] border border-[#FADCD5] text-xs text-[#C24E39] font-semibold text-center flex items-center justify-center gap-2">
