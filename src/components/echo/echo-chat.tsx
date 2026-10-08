@@ -17,6 +17,7 @@ import { useEmergency } from "@/components/emergency/emergency-provider";
 import { EchoDisclaimerGate } from "@/components/echo/echo-disclaimer-gate";
 import { ResourceChipLinker } from "@/components/echo/resource-chip-linker";
 import { cleanEchoResponseText } from "@/lib/ai/echo-prompt";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   id: string;
@@ -556,7 +557,40 @@ export function EchoChat({
                       </div>
                     ) : (
                       <>
-                        <div className="whitespace-pre-wrap">{msg.content}</div>
+                        {isUser ? (
+                          <div className="whitespace-pre-wrap">{msg.content}</div>
+                        ) : (
+                          <div className="text-[var(--hh-ink)] leading-relaxed">
+                            <ReactMarkdown
+                              components={{
+                                p: ({ children }) => (
+                                  <p className="mb-2.5 last:mb-0 leading-relaxed">{children}</p>
+                                ),
+                                strong: ({ children }) => (
+                                  <strong className="font-bold text-[var(--hh-ink)]">
+                                    {children}
+                                  </strong>
+                                ),
+                                em: ({ children }) => <em className="italic">{children}</em>,
+                                ul: ({ children }) => (
+                                  <ul className="my-2 space-y-1.5 pl-4 list-disc marker:text-[var(--hh-sage-deep)]">
+                                    {children}
+                                  </ul>
+                                ),
+                                ol: ({ children }) => (
+                                  <ol className="my-2 space-y-1.5 pl-4 list-decimal marker:text-[var(--hh-sage-deep)]">
+                                    {children}
+                                  </ol>
+                                ),
+                                li: ({ children }) => (
+                                  <li className="leading-relaxed pl-1">{children}</li>
+                                ),
+                              }}
+                            >
+                              {msg.content}
+                            </ReactMarkdown>
+                          </div>
+                        )}
 
                         {/* Emotion Guide Linker */}
                         {!isUser && !msg.isCrisis && !isLoading && (

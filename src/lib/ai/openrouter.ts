@@ -22,5 +22,5 @@ export const DEFAULT_ECHO_MODEL =
 
 export const ECHO_MODEL_SETTINGS = {
   temperature: 0.6,
-  maxOutputTokens: 500,
+  maxOutputTokens: 850,
 };
