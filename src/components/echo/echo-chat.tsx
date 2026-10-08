@@ -10,6 +10,8 @@ import {
   Phone,
   HeartHandshake,
   WifiOff,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { useEmergency } from "@/components/emergency/emergency-provider";
 import { EchoDisclaimerGate } from "@/components/echo/echo-disclaimer-gate";
@@ -44,69 +46,89 @@ export function EchoChat({
   // Disclaimer acceptance gate
   const [isDisclaimerAccepted, setIsDisclaimerAccepted] = useState(false);
   useEffect(() => {
-    const accepted = sessionStorage.getItem("hh_echo_disclaimer_accepted");
-    if (accepted === "true") {
-      setIsDisclaimerAccepted(true);
+    try {
+      const accepted =
+        localStorage.getItem("hh_echo_disclaimer_accepted") ||
+        sessionStorage.getItem("hh_echo_disclaimer_accepted");
+      if (accepted === "true") {
+        setIsDisclaimerAccepted(true);
+      }
+    } catch {
+      // Ignore storage access errors
     }
   }, []);
 
   const handleAcknowledgeDisclaimer = () => {
-    sessionStorage.setItem("hh_echo_disclaimer_accepted", "true");
+    try {
+      localStorage.setItem("hh_echo_disclaimer_accepted", "true");
+      sessionStorage.setItem("hh_echo_disclaimer_accepted", "true");
+    } catch {}
     setIsDisclaimerAccepted(true);
   };
 
   // Chat state
   const [sessionId, setSessionId] = useState<string>("");
-  useEffect(() => {
-    setSessionId(crypto.randomUUID());
-  }, []);
-
   const [messages, setMessages] = useState<Message[]>([]);
+  const [hasLoadedStorage, setHasLoadedStorage] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isComposerPaused, setIsComposerPaused] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Close fullscreen on Escape
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setIsOffline(!navigator.onLine);
-      const handleOnline = () => setIsOffline(false);
-      const handleOffline = () => setIsOffline(true);
-      window.addEventListener("online", handleOnline);
-      window.addEventListener("offline", handleOffline);
-      return () => {
-        window.removeEventListener("online", handleOnline);
-        window.removeEventListener("offline", handleOffline);
-      };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isFullscreen]);
+
+  // Lock body scroll in fullscreen
+  useEffect(() => {
+    if (isFullscreen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
     }
-  }, []);
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isFullscreen]);
 
-  // Auto-scroll and scroll-to-bottom pill
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [isScrolledUp, setIsScrolledUp] = useState(false);
-
-  const scrollToBottom = useCallback((smooth = true) => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: smooth ? "smooth" : "auto",
-    });
-  }, []);
-
+  // Restore chat history from localStorage on client mount
   useEffect(() => {
-    scrollToBottom(false);
-  }, [messages, isLoading, scrollToBottom]);
+    let savedSessionId = "";
+    let savedMessages: Message[] = [];
 
-  const handleScroll = () => {
-    if (!scrollContainerRef.current) return;
-    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
-    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-    setIsScrolledUp(distanceFromBottom > 120);
-  };
+    try {
+      savedSessionId = localStorage.getItem("hh_echo_session_id_v1") || "";
+      const rawMessages = localStorage.getItem("hh_echo_messages_v1");
+      if (rawMessages) {
+        const parsed = JSON.parse(rawMessages);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          savedMessages = parsed;
+        }
+      }
+    } catch (e) {
+      console.error("Error loading chat history from localStorage:", e);
+    }
 
-  // Initial welcome message from Echo
-  useEffect(() => {
-    if (messages.length === 0) {
+    if (!savedSessionId) {
+      savedSessionId = crypto.randomUUID();
+      try {
+        localStorage.setItem("hh_echo_session_id_v1", savedSessionId);
+      } catch {}
+    }
+    setSessionId(savedSessionId);
+
+    if (savedMessages.length > 0) {
+      setMessages(savedMessages);
+    } else {
       let initialGreeting =
         "Hi, I'm Echo. 🌱 I'm here to help you put your feelings into words, explore what's going on, and find something that might help.";
 
@@ -122,7 +144,66 @@ export function EchoChat({
         },
       ]);
     }
-  }, [initialEmotionTitle, messages.length]);
+
+    setHasLoadedStorage(true);
+  }, [initialEmotionTitle]);
+
+  // Persist chat messages to localStorage whenever they change
+  useEffect(() => {
+    if (hasLoadedStorage && messages.length > 0) {
+      try {
+        localStorage.setItem("hh_echo_messages_v1", JSON.stringify(messages));
+      } catch (e) {
+        console.error("Error saving chat to localStorage:", e);
+      }
+    }
+  }, [messages, hasLoadedStorage]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsOffline(!navigator.onLine);
+      const handleOnline = () => setIsOffline(false);
+      const handleOffline = () => setIsOffline(true);
+      window.addEventListener("online", handleOnline);
+      window.addEventListener("offline", handleOffline);
+      return () => {
+        window.removeEventListener("online", handleOnline);
+        window.removeEventListener("offline", handleOffline);
+      };
+    }
+  }, []);
+
+  // Container-only auto-scroll (NEVER scrolls page or window)
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isScrolledUp, setIsScrolledUp] = useState(false);
+
+  const scrollToBottom = useCallback((smooth = false) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    if (smooth) {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: "smooth",
+      });
+    } else {
+      container.scrollTop = container.scrollHeight;
+    }
+  }, []);
+
+  useEffect(() => {
+    // Only auto-scroll if the user hasn't actively scrolled up to read earlier messages
+    if (!isScrolledUp) {
+      scrollToBottom(false);
+    }
+  }, [messages, isLoading, isScrolledUp, scrollToBottom]);
+
+  const handleScroll = () => {
+    if (!scrollContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    setIsScrolledUp(distanceFromBottom > 100);
+  };
 
   // Sending message logic
   const handleSendMessage = async (textToSend?: string) => {
@@ -137,6 +218,12 @@ export function EchoChat({
     ];
     setMessages(newMessages);
     setIsLoading(true);
+    setIsScrolledUp(false);
+
+    // Scroll chat container immediately to reveal new user message without touching page scroll
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
 
     try {
       const response = await fetch("/api/echo", {
@@ -255,15 +342,36 @@ export function EchoChat({
   };
 
   const handleClearConversation = () => {
-    setMessages([
+    const newSession = crypto.randomUUID();
+    let initialGreeting =
+      "Conversation cleared. Hi, I'm Echo 🌱. What's on your mind today?";
+    if (initialEmotionTitle) {
+      initialGreeting += `\n\nI see you were looking into ${initialEmotionTitle}. Would you like to talk about what's been coming up for you, or something else entirely?`;
+    }
+
+    const resetMessages: Message[] = [
       {
-        id: "welcome-reset",
+        id: `welcome-${Date.now()}`,
         role: "assistant",
-        content:
-          "Conversation cleared. Hi, I'm Echo 🌱. What's on your mind today?",
+        content: initialGreeting,
       },
-    ]);
-    setSessionId(crypto.randomUUID());
+    ];
+
+    setSessionId(newSession);
+    setMessages(resetMessages);
+    setIsScrolledUp(false);
+
+    try {
+      localStorage.setItem("hh_echo_session_id_v1", newSession);
+      localStorage.setItem("hh_echo_messages_v1", JSON.stringify(resetMessages));
+    } catch (e) {
+      console.error("Failed to clear localStorage chat:", e);
+    }
+
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+
     setShowClearConfirm(false);
   };
 
@@ -275,8 +383,23 @@ export function EchoChat({
         onAcknowledge={handleAcknowledgeDisclaimer}
       />
 
+      {/* Fullscreen Backdrop Overlay */}
+      {isFullscreen && (
+        <div
+          className="fixed inset-0 z-40 bg-hh-ink/40 backdrop-blur-xs transition-opacity duration-200"
+          onClick={() => setIsFullscreen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Main Chat Container */}
-      <div className="relative flex flex-col h-[650px] sm:h-[700px] rounded-[28px] border border-[var(--hh-line)] bg-white shadow-[0_12px_40px_rgba(59,59,59,0.06)] overflow-hidden">
+      <div
+        className={
+          isFullscreen
+            ? "fixed inset-2 sm:inset-4 md:inset-6 z-50 flex flex-col rounded-[28px] border border-[var(--hh-line)] bg-white shadow-2xl overflow-hidden transition-all duration-300"
+            : "relative flex flex-col h-[650px] sm:h-[700px] rounded-[28px] border border-[var(--hh-line)] bg-white shadow-[0_12px_40px_rgba(59,59,59,0.06)] overflow-hidden"
+        }
+      >
         {/* Chat Header Bar */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--hh-line)] bg-[#FAF7F2]">
           <div className="flex items-center gap-3">
@@ -300,6 +423,26 @@ export function EchoChat({
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-[var(--hh-ink-soft)] hover:text-[var(--hh-ink)] hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--hh-blue)] transition-colors"
+              title={isFullscreen ? "Exit full screen (Esc)" : "Expand to full screen"}
+              aria-label={isFullscreen ? "Exit full screen" : "Expand to full screen"}
+            >
+              {isFullscreen ? (
+                <>
+                  <Minimize2 className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span className="hidden sm:inline">Exit Fullscreen</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span className="hidden sm:inline">Full Screen</span>
+                </>
+              )}
+            </button>
+
             <button
               type="button"
               onClick={() => setShowClearConfirm(true)}
@@ -340,7 +483,7 @@ export function EchoChat({
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="flex-1 p-5 sm:p-6 overflow-y-auto space-y-5 bg-[#FAF7F2]/40"
+          className="flex-1 p-5 sm:p-6 overflow-y-auto no-scrollbar space-y-5 bg-[#FAF7F2]/40"
           role="log"
           aria-live="polite"
           aria-label="Echo conversation history"

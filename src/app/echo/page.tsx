@@ -47,6 +47,8 @@ const ECHO_CAPABILITIES = [
     description:
       "Put tangled thoughts and feelings into words without fear of judgment or interruption.",
     color: "bg-[#EEF5FA] text-[var(--hh-blue-deep)]",
+    cardBg: "from-[#F5F9FD] to-white",
+    border: "border-[#D6E5F2]",
   },
   {
     icon: Compass,
@@ -54,6 +56,8 @@ const ECHO_CAPABILITIES = [
     description:
       "Pause and gently explore what your body and emotions might be trying to tell you.",
     color: "bg-[#F1F7F3] text-[#477053]",
+    cardBg: "from-[#F3F9F5] to-white",
+    border: "border-[#D7EADE]",
   },
   {
     icon: BookOpen,
@@ -61,6 +65,8 @@ const ECHO_CAPABILITIES = [
     description:
       "Discover relatable stories, interactive grounding activities, and printable worksheets.",
     color: "bg-[#FDFBF2] text-[#7A6B29]",
+    cardBg: "from-[#FCF9ED] to-white",
+    border: "border-[#F4EEC7]",
   },
   {
     icon: Sprout,
@@ -68,6 +74,8 @@ const ECHO_CAPABILITIES = [
     description:
       "Learn about talking to trusted adults, demystifying therapy, and exploring youth resources.",
     color: "bg-[#DFEFE4] text-[#477053]",
+    cardBg: "from-[#EBF5EE] to-white",
+    border: "border-[#D0E6D6]",
   },
   {
     icon: ShieldAlert,
@@ -75,6 +83,8 @@ const ECHO_CAPABILITIES = [
     description:
       "Fast, direct access to free 24/7 confidential helplines whenever you or a friend feel unsafe.",
     color: "bg-[#FFF5F2] text-[var(--hh-coral)]",
+    cardBg: "from-[#FFF6F3] to-white",
+    border: "border-[#FADCD5]",
   },
 ];
 
@@ -117,7 +127,7 @@ export default async function EchoPage({ searchParams }: EchoPageProps) {
         </div>
 
         {/* 5-Item "Echo can" Grid (Verbatim from CONTENT_SOURCE) */}
-        <div className="max-w-4xl mx-auto mb-12 sm:mb-16">
+        <div className="max-w-5xl mx-auto mb-12 sm:mb-16">
           <div className="text-center mb-6">
             <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--hh-ink-soft)]">
               What Echo Can Help With
@@ -125,7 +135,7 @@ export default async function EchoPage({ searchParams }: EchoPageProps) {
           </div>
 
           <div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"
             role="list"
             aria-label="Echo capabilities"
           >
@@ -135,15 +145,15 @@ export default async function EchoPage({ searchParams }: EchoPageProps) {
                 <div
                   key={cap.title}
                   role="listitem"
-                  className="p-4 rounded-2xl bg-white border border-[var(--hh-line)] shadow-2xs flex flex-col justify-between"
+                  className={`group p-5 rounded-[24px] bg-gradient-to-b ${cap.cardBg} border ${cap.border} shadow-[0_4px_20px_rgba(59,59,59,0.04)] hover:shadow-[0_12px_32px_rgba(59,59,59,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between`}
                 >
                   <div>
                     <div
-                      className={`w-9 h-9 rounded-xl ${cap.color} flex items-center justify-center mb-3`}
+                      className={`w-11 h-11 rounded-2xl ${cap.color} flex items-center justify-center mb-3.5 shadow-2xs group-hover:scale-105 transition-transform duration-200`}
                     >
-                      <Icon className="w-4 h-4" aria-hidden="true" />
+                      <Icon className="w-5 h-5" aria-hidden="true" />
                     </div>
-                    <h3 className="font-bold text-sm text-[var(--hh-ink)] mb-1 font-display">
+                    <h3 className="font-bold text-sm sm:text-base text-[var(--hh-ink)] mb-1.5 font-display tracking-tight">
                       {cap.title}
                     </h3>
                     <p className="text-xs text-[var(--hh-ink-soft)] leading-relaxed">
