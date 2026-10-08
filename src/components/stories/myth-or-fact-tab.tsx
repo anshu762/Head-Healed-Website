@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowUpRight, HelpCircle, CheckCircle2, RotateCcw, Eye, Sparkles } from "lucide-react";
+import { ArrowUpRight, HelpCircle, CheckCircle2, RotateCcw, Eye, EyeOff, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { MythItem } from "@/lib/data/stories-data";
 
@@ -22,9 +22,21 @@ export function MythOrFactTab({ myths }: MythOrFactTabProps) {
     });
   };
 
-  const handleToggleShowAll = () => {
+  const handleHideSingle = (id: string) => {
+    setRevealedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
     if (showAll) {
       setShowAll(false);
+    }
+  };
+
+  const handleToggleShowAll = () => {
+    if (showAll || revealedIds.size > 0) {
+      setShowAll(false);
+      setRevealedIds(new Set());
     } else {
       setShowAll(true);
       setRevealedIds(new Set(myths.map((m) => m.id)));
@@ -80,8 +92,17 @@ export function MythOrFactTab({ myths }: MythOrFactTabProps) {
             onClick={handleToggleShowAll}
             className="text-xs"
           >
-            <Eye className="h-3.5 w-3.5 mr-1.5" />
-            {showAll ? "Hide answers" : "Show all answers"}
+            {showAll || revealedIds.size > 0 ? (
+              <>
+                <EyeOff className="h-3.5 w-3.5 mr-1.5" />
+                <span>Hide answers</span>
+              </>
+            ) : (
+              <>
+                <Eye className="h-3.5 w-3.5 mr-1.5" />
+                <span>Show all answers</span>
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -130,7 +151,7 @@ export function MythOrFactTab({ myths }: MythOrFactTabProps) {
                       {item.fact}
                     </p>
 
-                    <div className="pt-2">
+                    <div className="pt-2 flex items-center justify-between">
                       <a
                         href={item.referenceUrl}
                         target="_blank"
@@ -141,6 +162,14 @@ export function MythOrFactTab({ myths }: MythOrFactTabProps) {
                         <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                         <span className="sr-only">(opens in a new tab)</span>
                       </a>
+
+                      <button
+                        type="button"
+                        onClick={() => handleHideSingle(item.id)}
+                        className="text-[11px] font-medium text-hh-ink-soft hover:text-hh-ink underline"
+                      >
+                        Hide answer
+                      </button>
                     </div>
                   </div>
                 </div>

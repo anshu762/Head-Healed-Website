@@ -13,8 +13,8 @@ const storySubmissionSchema = z.object({
     .transform((val) => (val?.trim() ? val.trim() : undefined)),
   content: z
     .string()
-    .min(100, "Your story must be at least 100 characters")
-    .max(2500, "Your story must be 2,500 characters or fewer"),
+    .min(10, "Please share at least a few words about what you are experiencing")
+    .max(25000, "Your story is exceptionally long. Please keep under 25,000 characters"),
   emotionSlug: z.string().optional(),
   authorName: z
     .string()
@@ -77,10 +77,10 @@ export async function submitStory(
     const cleanTitle = title ? stripHtml(title) : undefined;
     const cleanAuthor = authorName ? stripHtml(authorName) : "Anonymous";
 
-    if (cleanContent.length < 100) {
+    if (cleanContent.length < 10) {
       return {
         success: false,
-        message: "Your story must be at least 100 characters long after removing formatting.",
+        message: "Please share at least a few words about what you are experiencing.",
         error: "Too short",
       };
     }

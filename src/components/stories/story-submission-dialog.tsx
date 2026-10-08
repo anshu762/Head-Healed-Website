@@ -25,6 +25,13 @@ import {
   Loader2,
   Sparkles,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { EmotionOption } from "@/lib/data/stories-data";
 
 interface StorySubmissionDialogProps {
@@ -70,11 +77,8 @@ export function StorySubmissionDialog({
     }
   }, [isOpen]);
 
-  const charCount = story.length;
-  const isTooShort = charCount < 100;
-  const isTooLong = charCount > 2500;
-  const isValidLength = !isTooShort && !isTooLong;
-  const canSubmit = isValidLength && agreedToGuidelines && !isSubmitting;
+  const hasContent = story.trim().length > 0;
+  const canSubmit = hasContent && agreedToGuidelines && !isSubmitting;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,10 +97,13 @@ export function StorySubmissionDialog({
     setErrorMessage(null);
 
     try {
+      const actualEmotionSlug =
+        emotionSlug && emotionSlug !== "none" ? emotionSlug : undefined;
+
       const res = await submitStory({
         title: title || undefined,
         content: story,
-        emotionSlug: emotionSlug || undefined,
+        emotionSlug: actualEmotionSlug,
         authorName: authorName || "Anonymous",
         agreedToGuidelines: true,
       });
@@ -125,7 +132,7 @@ export function StorySubmissionDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[92vh]">
+      <DialogContent className="max-w-2xl max-h-[90vh] bg-gradient-to-b from-white via-white to-[#FAF7F2] border border-hh-line shadow-[0_24px_60px_-12px_rgba(59,59,59,0.18)] rounded-[28px] p-6 sm:p-8 no-scrollbar">
         {submittedSuccess ? (
           <div className="py-8 text-center space-y-4">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-hh-sage/25 text-hh-sage-deep">
@@ -212,20 +219,23 @@ export function StorySubmissionDialog({
                   Primary Emotion / Experience{" "}
                   <span className="font-normal text-hh-ink-soft">(Optional)</span>
                 </label>
-                <select
-                  id="story-emotion"
+                <Select
                   value={emotionSlug}
-                  onChange={(e) => setEmotionSlug(e.target.value)}
+                  onValueChange={setEmotionSlug}
                   disabled={isSubmitting}
-                  className="flex h-11 w-full rounded-xl border border-hh-line bg-white px-4 py-2 text-sm text-hh-ink transition-colors focus:outline-none focus:border-hh-blue-deep focus:ring-2 focus:ring-hh-blue-deep/20"
                 >
-                  <option value="">Select a related emotion (or leave blank)</option>
-                  {emotions.map((em) => (
-                    <option key={em.slug} value={em.slug}>
-                      {em.title}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger id="story-emotion" className="w-full">
+                    <SelectValue placeholder="Select a related emotion (or leave blank)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None / General Reflection</SelectItem>
+                    {emotions.map((em) => (
+                      <SelectItem key={em.slug} value={em.slug}>
+                        {em.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* NON-NEGOTIABLE PRIVACY NOTICE: Rendered above textarea in a prominent tinted card */}
@@ -274,23 +284,14 @@ export function StorySubmissionDialog({
                 </div>
               )}
 
-              {/* Story Textarea with live character counter */}
+              {/* Story Textarea without restrictive word limits */}
               <div>
                 <div className="flex items-center justify-between mb-1.5 text-xs">
                   <label htmlFor="story-content" className="font-bold text-hh-ink">
                     Your Story / Reflections <span className="text-hh-coral">*</span>
                   </label>
-                  <span
-                    className={
-                      isTooShort
-                        ? "text-hh-ink-soft"
-                        : isTooLong
-                        ? "font-semibold text-hh-coral"
-                        : "font-semibold text-hh-sage-deep"
-                    }
-                  >
-                    {charCount} / 2,500 characters{" "}
-                    {isTooShort && "(min. 100)"}
+                  <span className="text-hh-ink-soft text-[11px]">
+                    Share as much or as little as you like
                   </span>
                 </div>
                 <Textarea
