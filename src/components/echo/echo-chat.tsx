@@ -77,6 +77,16 @@ export function EchoChat({
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize composer textarea to fit text dynamically without scrollbar
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    const nextHeight = Math.min(Math.max(textarea.scrollHeight, 48), 160);
+    textarea.style.height = `${nextHeight}px`;
+  }, [input]);
 
   // Close fullscreen on Escape
   useEffect(() => {
@@ -663,13 +673,14 @@ export function EchoChat({
                 e.preventDefault();
                 handleSendMessage();
               }}
-              className="relative flex items-center gap-2"
+              className="relative flex items-end gap-2"
             >
               <label htmlFor="echo-chat-input" className="sr-only">
                 Type your reflection or message to Echo
               </label>
 
               <textarea
+                ref={textareaRef}
                 id="echo-chat-input"
                 rows={1}
                 value={input}
@@ -687,7 +698,7 @@ export function EchoChat({
                     ? "Please accept the safety notice above to start chatting..."
                     : "Put your thoughts into words here... (Enter to send)"
                 }
-                className="w-full resize-none rounded-2xl bg-[var(--hh-cream)]/70 px-4 py-3 pr-14 text-sm sm:text-base text-[var(--hh-ink)] placeholder:text-[var(--hh-ink-soft)] border border-[var(--hh-line)] focus:outline-none focus:ring-2 focus:ring-[var(--hh-blue)] focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+                className="w-full resize-none rounded-2xl bg-[var(--hh-cream)]/70 px-4 py-3 pr-14 text-sm sm:text-base text-[var(--hh-ink)] placeholder:text-[var(--hh-ink-soft)] border border-[var(--hh-line)] focus:outline-none focus:ring-2 focus:ring-[var(--hh-blue)] focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed transition-all no-scrollbar overflow-y-auto min-h-[48px] max-h-[160px]"
               />
 
               <button
@@ -698,7 +709,7 @@ export function EchoChat({
                   isComposerPaused ||
                   !isDisclaimerAccepted
                 }
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--hh-blue-deep)] text-white hover:bg-[var(--hh-blue)] disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--hh-blue-deep)] transition-colors shadow-2xs"
+                className="absolute right-2.5 bottom-2.5 flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--hh-blue-deep)] text-white hover:bg-[var(--hh-blue)] disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--hh-blue-deep)] transition-colors shadow-2xs"
                 aria-label="Send message to Echo"
               >
                 <Send className="w-4 h-4" aria-hidden="true" />

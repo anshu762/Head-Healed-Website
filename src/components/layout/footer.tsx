@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Heart, LifeBuoy, ArrowUpRight } from "lucide-react";
+import { Heart, LifeBuoy, ArrowUpRight, ShieldCheck } from "lucide-react";
 import { GLOBAL_DISCLAIMER } from "@/lib/safety/disclaimers";
 import { useEmergency } from "@/components/emergency/emergency-provider";
 
@@ -149,6 +149,15 @@ export function Footer() {
                   Contact &amp; Feedback
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/admin"
+                  className="text-hh-ink-soft hover:text-hh-ink hover:underline transition-colors flex items-center gap-1.5"
+                >
+                  <ShieldCheck className="h-3.5 w-3.5 text-hh-sage-deep" />
+                  <span>Admin Portal</span>
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
@@ -156,9 +165,17 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-12 flex flex-col sm:flex-row items-center justify-between border-t border-hh-line pt-6 text-xs text-hh-ink-soft gap-4">
           <p>© {new Date().getFullYear()} Heard &amp; Healed. An educational mental health platform for youth.</p>
-          <p className="flex items-center gap-1 text-center">
-            Designed for calm reflection and safe emotional learning.
-          </p>
+          <div className="flex items-center gap-3">
+            <span className="hidden sm:inline">Designed for calm reflection and safe emotional learning.</span>
+            <Link
+              href="/admin"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/5 hover:bg-black/10 text-[11px] font-semibold text-hh-ink transition-colors"
+              title="Moderator & Admin Portal"
+            >
+              <ShieldCheck className="w-3 h-3 text-hh-sage-deep" />
+              <span>Admin</span>
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
