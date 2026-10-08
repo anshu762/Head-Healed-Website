@@ -5,6 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { StoryCard } from "./story-card";
 import { StorySubmissionDialog } from "./story-submission-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { HeartHandshake, Sparkles, SlidersHorizontal, PlusCircle, Compass } from "lucide-react";
 import type { StoryItem, EmotionOption } from "@/lib/data/stories-data";
 
@@ -134,15 +141,15 @@ export function AnonymousStoriesTab({
 
         <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
           {/* Sort dropdown */}
-          <select
-            value={sortBy}
-            onChange={(e) => handleSortChange(e.target.value)}
-            className="rounded-full border border-hh-line bg-white px-3.5 py-1.5 text-xs font-semibold text-hh-ink hover:border-hh-blue-deep focus:outline-none"
-            aria-label="Sort stories"
-          >
-            <option value="newest">Sort: Newest</option>
-            <option value="relatable">Sort: Most Relatable</option>
-          </select>
+          <Select value={sortBy} onValueChange={handleSortChange}>
+            <SelectTrigger className="h-9 w-[160px] rounded-full text-xs font-semibold">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Sort: Newest</SelectItem>
+              <SelectItem value="relatable">Sort: Most Relatable</SelectItem>
+            </SelectContent>
+          </Select>
 
           {/* Share Your Story CTA */}
           <Button

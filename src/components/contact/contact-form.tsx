@@ -4,6 +4,13 @@ import * as React from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { submitContactMessage } from "@/app/actions/contact-action";
 import { Send, CheckCircle2, Loader2, Mail } from "lucide-react";
 
@@ -153,19 +160,18 @@ export function ContactForm() {
         >
           Reason for Contact <span className="text-hh-coral">*</span>
         </label>
-        <select
-          id="contact-subject"
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          disabled={isSubmitting}
-          className="flex h-11 w-full rounded-xl border border-hh-line bg-white px-4 py-2 text-sm text-hh-ink transition-colors focus:outline-none focus:border-hh-blue-deep focus:ring-2 focus:ring-hh-blue-deep/20"
-        >
-          <option value="General Feedback">General Feedback &amp; Suggestions</option>
-          <option value="Story Takedown Request">Story Takedown / Deletion Request</option>
-          <option value="Report Content">Report Content or Safety Concern</option>
-          <option value="Question about Heard & Healed">Question about Heard &amp; Healed</option>
-          <option value="Other">Other</option>
-        </select>
+        <Select value={subject} onValueChange={setSubject} disabled={isSubmitting}>
+          <SelectTrigger id="contact-subject" className="w-full">
+            <SelectValue placeholder="Select a reason for contact" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="General Feedback">General Feedback &amp; Suggestions</SelectItem>
+            <SelectItem value="Story Takedown Request">Story Takedown / Deletion Request</SelectItem>
+            <SelectItem value="Report Content">Report Content or Safety Concern</SelectItem>
+            <SelectItem value="Question about Heard & Healed">Question about Heard &amp; Healed</SelectItem>
+            <SelectItem value="Other">Other</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div>
