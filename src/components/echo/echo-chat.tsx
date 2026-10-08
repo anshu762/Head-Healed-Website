@@ -16,6 +16,7 @@ import {
 import { useEmergency } from "@/components/emergency/emergency-provider";
 import { EchoDisclaimerGate } from "@/components/echo/echo-disclaimer-gate";
 import { ResourceChipLinker } from "@/components/echo/resource-chip-linker";
+import { cleanEchoResponseText } from "@/lib/ai/echo-prompt";
 
 interface Message {
   id: string;
@@ -212,11 +213,14 @@ export function EchoChat({
 
     setInput("");
     const userMsgId = `user-${Date.now()}`;
-    const newMessages: Message[] = [
-      ...messages,
+    const assistantMsgId = `echo-${Date.now()}`;
+
+    // Add user message and immediate placeholder assistant bubble
+    setMessages((prev) => [
+      ...prev,
       { id: userMsgId, role: "user", content: text },
-    ];
-    setMessages(newMessages);
+      { id: assistantMsgId, role: "assistant", content: "" },
+    ]);
     setIsLoading(true);
     setIsScrolledUp(false);
 
@@ -231,10 +235,10 @@ export function EchoChat({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionId,
-          messages: newMessages.map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
+          messages: [
+            ...messages.map((m) => ({ role: m.role, content: m.content })),
+            { role: "user", content: text },
+          ],
           emotionSlug: initialEmotionSlug,
         }),
       });
@@ -248,16 +252,18 @@ export function EchoChat({
           // 1. Force-open emergency modal
           openEmergency();
 
-          // 2. Render crisis message
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `crisis-${Date.now()}`,
-              role: "assistant",
-              content: data.message,
-              isCrisis: true,
-            },
-          ]);
+          // 2. Render crisis message inside the assistant bubble
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantMsgId
+                ? {
+                    ...msg,
+                    content: data.message,
+                    isCrisis: true,
+                  }
+                : msg
+            )
+          );
 
           // 3. Pause composer for 3 seconds
           setIsComposerPaused(true);
@@ -271,14 +277,16 @@ export function EchoChat({
 
         // Handle Fallback or Rate Limit
         if (data.fallback || data.error) {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `fallback-${Date.now()}`,
-              role: "assistant",
-              content: data.message,
-            },
-          ]);
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantMsgId
+                ? {
+                    ...msg,
+                    content: data.message,
+                  }
+                : msg
+            )
+          );
           setIsLoading(false);
           return;
         }
@@ -296,18 +304,6 @@ export function EchoChat({
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let assistantReply = "";
-      const assistantMsgId = `echo-${Date.now()}`;
-
-      // Insert empty assistant bubble to receive tokens
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: assistantMsgId,
-          role: "assistant",
-          content: "",
-          isElevated,
-        },
-      ]);
 
       while (true) {
         const { done, value } = await reader.read();
@@ -316,26 +312,41 @@ export function EchoChat({
         const chunk = decoder.decode(value, { stream: true });
         assistantReply += chunk;
 
-        // Parse AI SDK stream format if formatted as data stream
-        // Standard data streams prefix with 0:"text"\n
+        // Parse AI SDK stream format if formatted as data stream and clean thinking traces
         const parsedText = parseAiSdkStreamChunk(assistantReply);
 
         setMessages((prev) =>
           prev.map((msg) =>
-            msg.id === assistantMsgId ? { ...msg, content: parsedText } : msg
+            msg.id === assistantMsgId
+              ? { ...msg, content: parsedText, isElevated }
+              : msg
+          )
+        );
+      }
+
+      // Final pass to clean trailing markers
+      const finalClean = cleanEchoResponseText(assistantReply);
+      if (finalClean) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMsgId
+              ? { ...msg, content: finalClean, isElevated }
+              : msg
           )
         );
       }
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `err-${Date.now()}`,
-          role: "assistant",
-          content:
-            "I'm having a little trouble connecting right now, but your feelings matter. Take a slow breath, and remember that you can always explore our grounding guides or talk to a trusted adult.",
-        },
-      ]);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMsgId
+            ? {
+                ...msg,
+                content:
+                  "I'm having a little trouble connecting right now, but your feelings matter. Take a slow breath, and remember that you can always explore our grounding guides or talk to a trusted adult.",
+              }
+            : msg
+        )
+      );
     } finally {
       setIsLoading(false);
     }
@@ -516,11 +527,32 @@ export function EchoChat({
                         : "rounded-tl-xs bg-white border border-[var(--hh-line)] text-[var(--hh-ink)]"
                     }`}
                   >
-                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                    {!msg.content ? (
+                      <div className="flex items-center gap-2 py-1 px-1 text-sm text-[var(--hh-ink-soft)]">
+                        <span className="flex items-center gap-1.5">
+                          <span className="h-2 w-2 rounded-full bg-[var(--hh-sage-deep)] animate-bounce" />
+                          <span
+                            className="h-2 w-2 rounded-full bg-[var(--hh-sage-deep)] animate-bounce"
+                            style={{ animationDelay: "0.2s" }}
+                          />
+                          <span
+                            className="h-2 w-2 rounded-full bg-[var(--hh-sage-deep)] animate-bounce"
+                            style={{ animationDelay: "0.4s" }}
+                          />
+                        </span>
+                        <span className="text-xs italic text-[var(--hh-ink-soft)]">
+                          Echo is reflecting...
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="whitespace-pre-wrap">{msg.content}</div>
 
-                    {/* Emotion Guide Linker */}
-                    {!isUser && !msg.isCrisis && (
-                      <ResourceChipLinker content={msg.content} />
+                        {/* Emotion Guide Linker */}
+                        {!isUser && !msg.isCrisis && !isLoading && (
+                          <ResourceChipLinker content={msg.content} />
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -550,26 +582,6 @@ export function EchoChat({
               </div>
             );
           })}
-
-          {/* Typing Indicator */}
-          {isLoading && (
-            <div className="flex items-center gap-2.5 pl-10">
-              <div className="flex items-center gap-1.5 rounded-full bg-white px-4 py-2 border border-[var(--hh-line)] shadow-2xs">
-                <span className="h-1.5 w-1.5 rounded-full bg-[var(--hh-ink-soft)] animate-bounce" />
-                <span
-                  className="h-1.5 w-1.5 rounded-full bg-[var(--hh-ink-soft)] animate-bounce"
-                  style={{ animationDelay: "0.2s" }}
-                />
-                <span
-                  className="h-1.5 w-1.5 rounded-full bg-[var(--hh-ink-soft)] animate-bounce"
-                  style={{ animationDelay: "0.4s" }}
-                />
-              </div>
-              <span className="text-xs text-[var(--hh-ink-soft)] italic">
-                Echo is reflecting...
-              </span>
-            </div>
-          )}
 
           <div ref={messagesEndRef} />
         </div>
@@ -721,6 +733,8 @@ export function EchoChat({
 function parseAiSdkStreamChunk(raw: string): string {
   if (!raw) return "";
 
+  let text = raw;
+
   // If text starts with AI SDK data stream protocol (e.g., 0:"...")
   if (/^0:"/.test(raw) || /\n0:"/.test(raw)) {
     const lines = raw.split("\n");
@@ -735,8 +749,8 @@ function parseAiSdkStreamChunk(raw: string): string {
         }
       }
     }
-    return accumulated || raw;
+    text = accumulated || raw;
   }
 
-  return raw;
+  return cleanEchoResponseText(text);
 }

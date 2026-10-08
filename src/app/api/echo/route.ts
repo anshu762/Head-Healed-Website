@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { streamText } from "ai";
@@ -10,6 +12,7 @@ import {
 } from "@/lib/ai/openrouter";
 import {
   buildEchoSystemPrompt,
+  cleanEchoResponseText,
   CRISIS_RESPONSE_TEXT,
   CALM_FALLBACK_TEXT,
 } from "@/lib/ai/echo-prompt";
@@ -194,11 +197,12 @@ export async function POST(req: NextRequest) {
       temperature: ECHO_MODEL_SETTINGS.temperature,
       maxOutputTokens: ECHO_MODEL_SETTINGS.maxOutputTokens,
       onFinish: async ({ text }) => {
-        // Persist session and messages asynchronously
+        // Persist session and messages asynchronously (cleaned of any reasoning markers)
+        const cleanText = cleanEchoResponseText(text);
         persistMessageAsync({
           sessionId: clientSessionId,
           userContent: latestUserMessage.content,
-          assistantContent: text,
+          assistantContent: cleanText || text,
           riskFlagged: isElevated,
           riskLevel: isElevated ? "MEDIUM" : "NONE",
         });
@@ -207,6 +211,10 @@ export async function POST(req: NextRequest) {
 
     const response = result.toTextStreamResponse({
       headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        "X-Accel-Buffering": "no",
+        "Connection": "keep-alive",
         "x-echo-risk": risk.level,
       },
     });

@@ -27,13 +27,28 @@ NON-NEGOTIABLE SAFETY CONTRACT (MANDATORY RULES):
 6. NEVER promise confidentiality or secrecy regarding danger, and never claim you can keep them physically safe.
 
 HOW TO COMMUNICATE (ECHO'S VOICE):
-- Warm, gentle, non-judgmental, and validating.
-- Write in short, readable paragraphs (2 to 4 sentences each). Avoid walls of text.
-- VALIDATE FIRST: Always acknowledge and normalize their feeling before asking a question or offering thoughts (e.g., "It makes total sense that feeling left out would feel heavy.").
-- ONE QUESTION AT A TIME: Ask at most one gentle, open-ended reflective question per response. Never interrogate the user with multiple back-to-back questions.
+- Warm, gentle, empathetic, non-judgmental, and validating.
+- Write in short, readable paragraphs (2 to 3 sentences each). Never write big overwhelming walls of text.
+- VALIDATE FIRST: Always acknowledge and normalize their feeling before asking a question or offering thoughts (e.g., "It makes total sense that you'd feel this way.").
+- ONE QUESTION AT A TIME: Ask at most ONE gentle, open-ended reflective question per response. Never interrogate the user with multiple back-to-back questions.
 - NO PRESCRIPTIVE COMMANDS: Never say "You should do X" or "You must do Y". Instead say: "Some people find it helpful to...", "Would it feel okay to explore...", or "One thing you might gently try is...".
 - ON-PLATFORM RESOURCES: Suggest gentle grounding exercises (like the 5-4-3-2-1 reset or taking 3 slow breaths), exploring relatable peer stories, or checking the emotion guides on Heard & Healed.
-- TRUSTED ADULTS: Whenever someone is feeling burdened or stuck, gently remind them that sharing with a trusted adult (like a parent, older sibling, school counsellor, teacher, or relative) can make things feel lighter.`;
+- TRUSTED ADULTS: Whenever someone is feeling burdened or stuck, gently remind them that sharing with a trusted adult can make things feel lighter.
+
+LANGUAGE MATCHING & USER-FRIENDLY ADAPTABILITY (CRITICAL):
+- MATCH THE USER'S LANGUAGE AND TONE NATURALLY:
+  * If the user writes in Hinglish (e.g. "mera naam anubhav kya tum mera help kar sakte ho" or "aaj bohot akela lag raha hai"):
+    Respond in warm, natural, friendly Hinglish (e.g. "Hello Anubhav! 🌱 Haan bilkul, main yahan hoon aapki baat sunne aur help karne ke liye. Aaj aap kaisa feel kar rahe ho? Jo bhi man mein hai, bina kisi darr ke share kar sakte ho.").
+  * If the user writes in Hindi (Devanagari): Respond in gentle, supportive Hindi.
+  * If the user writes in English: Respond in warm, gentle English.
+- Always sound like a caring, approachable companion who is genuinely glad the user reached out.
+
+CRITICAL OUTPUT FORMATTING & ANTI-LEAK RULES:
+- NEVER output internal thinking, analysis, chain of thought, or meta-commentary.
+- NEVER say "Here's a thinking process:", "1. Analyze User Input:", "Identify Persona:", "Draft:", or "<think>".
+- Do NOT output bulleted breakdowns analyzing the user's message.
+- Start your response immediately with your warm, caring, direct message to the user.
+- Do NOT use harsh unformatted markdown bullets for self-analysis. Keep markdown clean, soft, and readable.`;
 
   if (emotionContext) {
     prompt += `\n\nUSER CONTEXT:
@@ -52,3 +67,59 @@ The user's recent words reflect elevated emotional weight, exhaustion, or distre
 
   return prompt;
 }
+
+/**
+ * Strips out internal reasoning traces, <think> tags, and thought processes
+ * that reasoning models may inadvertently output.
+ */
+export function cleanEchoResponseText(raw: string): string {
+  if (!raw) return "";
+
+  let cleaned = raw;
+
+  // 1. Remove closed <think>...</think> tags
+  cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, "");
+
+  // 2. If inside an unclosed <think> tag, hide in-progress thinking
+  if (cleaned.includes("<think>")) {
+    cleaned = cleaned.replace(/<think>[\s\S]*$/gi, "");
+  }
+
+  // 3. Remove "Here's a thinking process:" or "Thinking Process:" block if present
+  if (/Here'?s a thinking process/i.test(cleaned) || /^Thinking Process/i.test(cleaned)) {
+    const markerMatch = cleaned.match(/(?:Draft|Response|Final Response|Echo|Output):?\s*[\r\n]+([\s\S]+)$/i);
+    if (markerMatch) {
+      cleaned = markerMatch[1];
+    } else {
+      const parts = cleaned.split(/\n\s*\n/);
+      const filteredParts = parts.filter((p) => {
+        const trimmed = p.trim();
+        if (/Here'?s a thinking process/i.test(trimmed)) return false;
+        if (/^\d+\.\s+\*\*/.test(trimmed)) return false;
+        if (/^[-*]\s+\*\*/.test(trimmed)) return false;
+        if (/^[-*]\s+User says/i.test(trimmed)) return false;
+        if (/^[-*]\s+Language/i.test(trimmed)) return false;
+        if (/^[-*]\s+Identify Persona/i.test(trimmed)) return false;
+        if (/^[-*]\s+Determine Response/i.test(trimmed)) return false;
+        if (/^Structure:/i.test(trimmed)) return false;
+        return true;
+      });
+      cleaned = filteredParts.join("\n\n");
+    }
+  }
+
+  // 4. Remove leading label if present (e.g. "Draft: ...", "Echo: ...")
+  cleaned = cleaned.replace(/^(?:Draft|Response|Final Response|Echo|Output):\s*/i, "");
+
+  // 5. Strip outer quotes if entire response was wrapped in quotes
+  cleaned = cleaned.trim();
+  if (
+    (cleaned.startsWith('"') && cleaned.endsWith('"') && cleaned.length > 2) ||
+    (cleaned.startsWith('“') && cleaned.endsWith('”') && cleaned.length > 2)
+  ) {
+    cleaned = cleaned.slice(1, -1).trim();
+  }
+
+  return cleaned;
+}
+
