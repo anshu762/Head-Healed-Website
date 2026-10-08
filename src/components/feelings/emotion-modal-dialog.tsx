@@ -22,7 +22,8 @@ export function EmotionModalDialog({
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
       setOpen(false);
-      router.back();
+      // Ensure closing the modal always returns user directly to /feelings page
+      router.push("/feelings", { scroll: false });
     }
   };
 
@@ -34,7 +35,7 @@ export function EmotionModalDialog({
 
         <DialogPrimitive.Content
           aria-describedby="emotion-detail-content"
-          className="fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-[28px] border border-hh-line bg-white p-6 sm:p-8 shadow-2xl transition-all duration-200 max-h-[90vh] overflow-y-auto focus:outline-none"
+          className="fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-[28px] border border-hh-line bg-white p-6 sm:p-8 shadow-2xl transition-all duration-200 max-h-[90vh] overflow-y-auto no-scrollbar focus:outline-none"
         >
           {/* Close button at top right */}
           <div className="flex justify-end -mt-2 -mr-2 mb-2">
