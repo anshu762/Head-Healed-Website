@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { SubmissionStatus } from "@prisma/client";
+import { getApprovedLocalStories } from "./local-store";
 
 export interface StoryItem {
   id: string;
@@ -240,8 +241,22 @@ function calculateReadTime(text: string): number {
 }
 
 export async function getApprovedStories(): Promise<StoryItem[]> {
+  const approvedLocal: StoryItem[] = getApprovedLocalStories().map((s) => ({
+    id: s.id,
+    slug: s.slug,
+    title: s.title,
+    excerpt: s.excerpt,
+    content: s.content,
+    authorName: s.authorName,
+    isAnonymous: s.isAnonymous,
+    emotionSlug: s.emotionSlug,
+    status: s.status,
+    createdAt: s.createdAt,
+    readTimeMinutes: calculateReadTime(s.content),
+  }));
+
   try {
-    const stories = await db.story.findMany({
+    const storiesPromise = db.story.findMany({
       where: {
         status: SubmissionStatus.APPROVED,
       },
@@ -249,9 +264,16 @@ export async function getApprovedStories(): Promise<StoryItem[]> {
         createdAt: "desc",
       },
     });
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("DB Timeout")), 2000)
+    );
+    const stories = (await Promise.race([
+      storiesPromise,
+      timeoutPromise,
+    ])) as Awaited<typeof storiesPromise>;
 
     if (stories && stories.length > 0) {
-      return stories.map((s) => ({
+      const dbStories = stories.map((s) => ({
         id: s.id,
         slug: s.slug,
         title: s.title,
@@ -264,21 +286,55 @@ export async function getApprovedStories(): Promise<StoryItem[]> {
         createdAt: s.createdAt,
         readTimeMinutes: calculateReadTime(s.content),
       }));
+
+      const existingSlugs = new Set(dbStories.map((s) => s.slug));
+      return [
+        ...approvedLocal.filter((s) => !existingSlugs.has(s.slug)),
+        ...dbStories,
+      ];
     }
   } catch {
     // Database unreachable fallback
   }
 
-  return FALLBACK_STORIES;
+  const existingSlugs = new Set(FALLBACK_STORIES.map((s) => s.slug));
+  return [
+    ...approvedLocal.filter((s) => !existingSlugs.has(s.slug)),
+    ...FALLBACK_STORIES,
+  ];
 }
 
 export async function getStoryBySlug(slug: string): Promise<StoryItem | null> {
+  const localMatch = getApprovedLocalStories().find((s) => s.slug === slug);
+  if (localMatch) {
+    return {
+      id: localMatch.id,
+      slug: localMatch.slug,
+      title: localMatch.title,
+      excerpt: localMatch.excerpt,
+      content: localMatch.content,
+      authorName: localMatch.authorName,
+      isAnonymous: localMatch.isAnonymous,
+      emotionSlug: localMatch.emotionSlug,
+      status: localMatch.status,
+      createdAt: localMatch.createdAt,
+      readTimeMinutes: calculateReadTime(localMatch.content),
+    };
+  }
+
   try {
-    const story = await db.story.findUnique({
+    const storyPromise = db.story.findUnique({
       where: {
         slug,
       },
     });
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("DB Timeout")), 2000)
+    );
+    const story = (await Promise.race([
+      storyPromise,
+      timeoutPromise,
+    ])) as Awaited<typeof storyPromise>;
 
     if (story && story.status === SubmissionStatus.APPROVED) {
       return {

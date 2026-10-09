@@ -3,7 +3,8 @@ import { cookies } from "next/headers";
 import { Container } from "@/components/ui/container";
 import { AdminLoginForm } from "@/components/admin/admin-login-form";
 import type { AdminStory, AdminContactMessage } from "@/components/admin/admin-dashboard";
-import { db } from "@/lib/db";
+import { db, isDbConfigured } from "@/lib/db";
+import { getLocalStories, getLocalContacts } from "@/lib/data/local-store";
 import type { Metadata } from "next";
 
 const AdminDashboard = dynamic(
@@ -48,51 +49,97 @@ export default async function AdminPage() {
     );
   }
 
-  // Fetch all stories across all statuses
-  let stories: AdminStory[] = [];
-  let contactMessages: AdminContactMessage[] = [];
+  // Fetch all stories across all statuses (Database + Local Store)
+  let dbStories: AdminStory[] = [];
+  let dbContactMessages: AdminContactMessage[] = [];
 
-  try {
-    const rawStories = await db.story.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+  if (isDbConfigured()) {
+    try {
+      const rawStoriesPromise = db.story.findMany({
+        orderBy: { createdAt: "desc" },
+      });
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("DB Timeout")), 2000)
+      );
+      const rawStories = (await Promise.race([
+        rawStoriesPromise,
+        timeoutPromise,
+      ])) as Awaited<typeof rawStoriesPromise>;
 
-    stories = rawStories.map((s) => ({
-      id: s.id,
-      slug: s.slug,
-      title: s.title,
-      excerpt: s.excerpt,
-      content: s.content,
-      authorName: s.authorName,
-      emotionSlug: s.emotionSlug,
-      status: s.status,
-      riskLevel: s.riskLevel,
-      createdAt: s.createdAt.toISOString(),
-    }));
+      dbStories = rawStories.map((s) => ({
+        id: s.id,
+        slug: s.slug,
+        title: s.title,
+        excerpt: s.excerpt,
+        content: s.content,
+        authorName: s.authorName,
+        emotionSlug: s.emotionSlug,
+        status: s.status,
+        riskLevel: s.riskLevel,
+        createdAt: s.createdAt.toISOString(),
+      }));
 
-    const rawMessages = await db.contactMessage.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+      const rawMessages = await db.contactMessage.findMany({
+        orderBy: { createdAt: "desc" },
+      });
 
-    contactMessages = rawMessages.map((m) => ({
-      id: m.id,
-      name: m.name,
-      email: m.email,
-      subject: m.subject,
-      message: m.message,
-      status: m.status,
-      createdAt: m.createdAt.toISOString(),
-    }));
-  } catch (err) {
-    console.error("Failed to fetch admin data from database:", err);
+      dbContactMessages = rawMessages.map((m) => ({
+        id: m.id,
+        name: m.name,
+        email: m.email,
+        subject: m.subject,
+        message: m.message,
+        status: m.status,
+        createdAt: m.createdAt.toISOString(),
+      }));
+    } catch (err) {
+      console.warn("Database not reachable in admin, falling back to local submissions:", err);
+    }
   }
+
+  // Load local store submissions
+  const localStories: AdminStory[] = getLocalStories().map((s) => ({
+    id: s.id,
+    slug: s.slug,
+    title: s.title,
+    excerpt: s.excerpt,
+    content: s.content,
+    authorName: s.authorName,
+    emotionSlug: s.emotionSlug,
+    status: s.status,
+    riskLevel: s.riskLevel,
+    createdAt: s.createdAt,
+  }));
+
+  const localContacts: AdminContactMessage[] = getLocalContacts().map((m) => ({
+    id: m.id,
+    name: m.name,
+    email: m.email,
+    subject: m.subject,
+    message: m.message,
+    status: m.status,
+    createdAt: m.createdAt,
+  }));
+
+  // Merge unique by ID/Slug
+  const existingStorySlugs = new Set(dbStories.map((s) => s.slug));
+  const mergedStories = [
+    ...localStories.filter((s) => !existingStorySlugs.has(s.slug)),
+    ...dbStories,
+  ];
+
+  const existingContactIds = new Set(dbContactMessages.map((c) => c.id));
+  const mergedContacts = [
+    ...localContacts.filter((c) => !existingContactIds.has(c.id)),
+    ...dbContactMessages,
+  ];
 
   return (
     <div className="py-12 sm:py-20">
       <Container>
         <AdminDashboard
-          stories={stories}
-          contactMessages={contactMessages}
+          stories={mergedStories}
+          contactMessages={mergedContacts}
         />
       </Container>
     </div>
